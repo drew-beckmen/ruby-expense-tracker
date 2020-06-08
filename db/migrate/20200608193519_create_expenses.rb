@@ -5,7 +5,7 @@ class CreateExpenses < ActiveRecord::Migration[5.2]
       t.integer :user_id
       t.integer :category_id
       t.string :description 
-      t.datetime :logged_at
+      t.date :logged_on
     end 
   end
 end

@@ -13,7 +13,7 @@
 ActiveRecord::Schema.define(version: 2020_06_08_193519) do
 
   create_table "categories", force: :cascade do |t|
-    t.string "type"
+    t.string "method_payment"
   end
 
   create_table "expenses", force: :cascade do |t|
@@ -21,7 +21,7 @@ ActiveRecord::Schema.define(version: 2020_06_08_193519) do
     t.integer "user_id"
     t.integer "category_id"
     t.string "description"
-    t.datetime "logged_at"
+    t.date "logged_on"
   end
 
   create_table "users", force: :cascade do |t|
