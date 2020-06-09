@@ -14,7 +14,6 @@ c2 = Payment.create(method_payment: "Debit Card")
 c3 = Payment.create(method_payment: "Check")
 c4 = Payment.create(method_payment: "Cash")
 
-
 Expense.create(amount: 500, user_id: u1.id, payment_id: c1.id, description: "Monthly rent", logged_on: Date.today)
 Expense.create(amount: 45, user_id: u2.id, payment_id: c1.id, description: "Dinner out", logged_on: Date.new(2001, 2, 3))
 Expense.create(amount: 50, user_id: u3.id, payment_id: c2.id, description: "Groceries", logged_on: Date.new(2020, 6, 6))
