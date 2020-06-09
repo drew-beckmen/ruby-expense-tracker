@@ -7,7 +7,7 @@ end
 
 class User < ActiveRecord::Base
     has_many :expenses
-    has_many :categories, through: :expenses
+    has_many :payments, through: :expenses
 
     # Returns the total expenses logged in this platform by a specific User instance
     def total_expenses
@@ -19,20 +19,43 @@ class User < ActiveRecord::Base
         self.expenses.select {|expense| expense.logged_on.within_last?(duration)}
     end
 
+    # Returns all expense instances from past week
+    def expenses_this_week 
+        self.get_specific_expenses(7)
+    end 
+
     # Returns total expenses logged by this user in the previous week
     def total_week_expenses
-        sum_expenses(self.get_specific_expenses(7))
+        sum_expenses(expenses_this_week)
+    end 
+
+    # Returns all expense instances from past month 
+    def expenses_this_month 
+        self.get_specific_expenses(30)
     end 
 
     # Returns total expenses logged by this user in the previous month (30 days)
     def total_month_expenses
-        sum_expenses(self.get_specific_expenses(30))
+        sum_expenses(expenses_this_month)
+    end 
+
+    #  Returns all expense instances from past year
+    def expenses_this_year 
+        self.get_specific_expenses(365)
     end 
 
     # Returns total expenses logged by this user in the previous year
     def total_year_expenses
-        sum_expenses(self.get_specific_expenses(365))
+        sum_expenses(expenses_this_year)
     end 
+
+    # Given an input of a year, return an array of all the expenses
+    def expenses_given_year(year)
+        self.expenses.select {|expense| expense.logged_on.year == year}
+    end
+
+    # Write methods that give summary of expenses by payment method!
+    
 
     # Define a private instance method that should only be used internally to sum
     # instances of Expense for a given user 
