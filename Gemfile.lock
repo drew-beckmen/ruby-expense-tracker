@@ -39,8 +39,6 @@ GEM
       railties (>= 3.2, < 6.1)
     equatable (0.6.1)
     erubi (1.9.0)
-    figaro (1.2.0)
-      thor (>= 0.14.0, < 2)
     formatador (0.2.5)
     http-accept (1.7.0)
     http-cookie (1.0.3)
@@ -130,7 +128,6 @@ DEPENDENCIES
   activerecord (~> 5.2)
   colorize (~> 0.8.1)
   dotenv-rails
-  figaro
   formatador
   json
   pry

@@ -1,6 +1,7 @@
 require_relative './api-reader.rb'
 require_relative '../config/environment'
 require 'pry'
+
 #----------------------------------------------------------
 #This method retrieves all currencies supported by the app
 #----------------------------------------------------------
@@ -276,8 +277,6 @@ def update_expense(user)
     description, date = choose_previous_transaction(user, "update")
     expense_to_update = Expense.find_by(description: description, logged_on: date, user_id: user.id)
     category_to_update = $prompt.multi_select("What would you like to update?", ["amount", "description", "logged_on", "payment_method"])
-    # Iterate through category_to_update, and if it is "amount" - get_amount(user) "logged_on" - select_date payment_method - get_payment_method(user)
-    # ["amount", "date"]
     amount, logged_on, payment_method, description = expense_to_update.amount, expense_to_update.logged_on, expense_to_update.payment, expense_to_update.description 
     category_to_update.each do |change|
         case change 
