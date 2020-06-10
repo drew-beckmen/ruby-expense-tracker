@@ -11,4 +11,5 @@ gem 'figaro'
 gem "colorize", "~> 0.8.1"
 gem 'json'
 gem "rest-client", "~> 2.1"
+gem 'formatador'
 gem 'dotenv-rails', groups: [:development, :test]
