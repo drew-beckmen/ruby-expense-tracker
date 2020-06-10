@@ -4,7 +4,7 @@ class CreateExpenses < ActiveRecord::Migration[5.2]
       t.float :amount 
       t.integer :user_id
       t.integer :payment_id
-      t.string :description 
+      t.string :description, default: "No description added."
       t.date :logged_on
     end 
   end

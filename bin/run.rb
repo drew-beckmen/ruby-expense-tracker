@@ -163,7 +163,6 @@ def select_date
         date = Date.today - 1
     when "Further back in time"
         arr_date = enter_date
-        # binding.pry
         while invalid_date(arr_date)
             puts "Sorry, not a valid date. Please try entering again: "
             arr_date = enter_date
@@ -207,10 +206,19 @@ def get_payment_method(user)
     p
 end 
 
+def get_description 
+    description = $prompt.ask("Please briefly describe this expense: ")
+    while description.nil? 
+        puts "Sorry, not a valid description."
+        description = $prompt.ask("Please try again: ")
+    end 
+    description
+end 
+
 def create_expense(user)
     date = select_date
     amount = get_amount(user)
-    description = $prompt.ask("Please briefly describe this expense: ")
+    description = get_description
     p = get_payment_method(user)
     Expense.create(amount: amount, user_id: user.id, payment_id: p.id, description: description, logged_on: date)
     user.expenses.reload 
@@ -237,7 +245,6 @@ def review_expenses(user)
     end 
     case review_time 
     when "All expenses"
-        binding.pry
         display_expenses(user.expenses)
     when "Expenses from the past year."
         display_expenses(user.expenses_this_year)
@@ -251,6 +258,47 @@ def review_expenses(user)
     end 
 end 
 
+def choose_previous_transaction(user, operation)
+    expense_descriptions = user.expenses.map{|expense| "#{expense.description} - #{expense.logged_on}"}    
+    expense_to_delete = $prompt.select("Choose an expense to #{operation}: ", expense_descriptions)
+    expense_to_delete.split(" - ")
+end 
+    
+
+def delete_expense(user)
+    description, date = choose_previous_transaction(user, "delete")
+    Expense.find_by(description: description, logged_on: date, user_id: user.id).destroy
+    user.expenses.reload
+end
+
+
+def update_expense(user)
+    description, date = choose_previous_transaction(user, "update")
+    expense_to_update = Expense.find_by(description: description, logged_on: date, user_id: user.id)
+    category_to_update = $prompt.multi_select("What would you like to update?", ["amount", "description", "logged_on", "payment_method"])
+    # Iterate through category_to_update, and if it is "amount" - get_amount(user) "logged_on" - select_date payment_method - get_payment_method(user)
+    # ["amount", "date"]
+    amount, logged_on, payment_method, description = expense_to_update.amount, expense_to_update.logged_on, expense_to_update.payment, expense_to_update.description 
+    category_to_update.each do |change|
+        case change 
+        when "amount"
+            puts "The original amount was #{expense_to_update.amount}"
+            amount = get_amount(user)
+        when "logged_on"
+            puts "The original date was #{expense_to_update.logged_on}"
+            logged_on = select_date
+        when "payment_method"
+            puts "The original payment method was #{expense_to_update.payment.method_payment}"
+            payment_method = get_payment_method(user) #this variable will a Payment object.
+        when "description"
+            puts "The original description was #{expense_to_update.description}"
+            description = get_description
+        end 
+    end
+    expense_to_update.update(amount: amount, description: description, logged_on: logged_on, payment_id: payment_method.id)
+    user.expenses.reload
+end 
+
 # Master method to run whole program 
 def run 
     system "clear"
@@ -260,6 +308,10 @@ def run
         case action
         when "Enter a new expense."
             create_expense(active_user)
+        when "Delete an existing expense."
+            delete_expense(active_user)
+        when "Update an existing expense."
+            update_expense(active_user)
         when "Review my expenses."
             review_expenses(active_user)
         when "Currency exchange calculator."
