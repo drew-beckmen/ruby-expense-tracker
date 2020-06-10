@@ -213,6 +213,42 @@ def create_expense(user)
     description = $prompt.ask("Please briefly describe this expense: ")
     p = get_payment_method(user)
     Expense.create(amount: amount, user_id: user.id, payment_id: p.id, description: description, logged_on: date)
+    user.expenses.reload 
+end 
+
+def display_expenses(list_expenses)
+    arr_hashes = list_expenses.map {|expense| expense.attributes}
+    arr_hashes.map{|expense| 
+        expense.delete("id") # we don't need the id of each expense
+        expense.delete("user_id") # nor do we need the user it belongs to 
+        expense["payment_method"] = expense.delete "payment_id" #change name of the column in the table
+        expense["payment_method"] = Payment.find(expense["payment_method"]).method_payment #change value from unique id to corresponding payment method
+    }
+    Formatador.display_table(arr_hashes) #display the table
+end 
+
+def review_expenses(user)
+    review_time = $prompt.select("What expenses would you like to review?") do |menu|
+        menu.choice "All expenses"
+        menu.choice "Expenses from the past year."
+        menu.choice "Expenses from the past month."
+        menu.choice "Expenses from the past week."
+        menu.choice "Expenses by payment method."
+    end 
+    case review_time 
+    when "All expenses"
+        binding.pry
+        display_expenses(user.expenses)
+    when "Expenses from the past year."
+        display_expenses(user.expenses_this_year)
+    when "Expenses from the past month."
+        display_expenses(user.expenses_this_month)
+    when "Expenses from the past week."
+        display_expenses(user.expenses_this_week)
+    when "Expenses by payment method."
+        payment = $prompt.select("Pick a payment method: ", user.payments_list)
+        display_expenses(user.expenses_by_payment_method(payment))
+    end 
 end 
 
 # Master method to run whole program 
@@ -224,6 +260,8 @@ def run
         case action
         when "Enter a new expense."
             create_expense(active_user)
+        when "Review my expenses."
+            review_expenses(active_user)
         when "Currency exchange calculator."
             currency_exchange
         when "Quit the program."

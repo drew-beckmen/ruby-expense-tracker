@@ -56,12 +56,12 @@ class User < ActiveRecord::Base
 
     # Returns a list of all payment methods that this user has used.
     def payments_list
-        self.payments.map{|payment| payment.method_payment}
+        self.payments.map{|payment| payment.method_payment}.uniq
     end
 
     # Returns summary of expenses by payment methods.
-    def payments_methods(method_payment)
-        self.payments.select {|payment| payment.method_payment == method_payment}
+    def expenses_by_payment_method(method_payment)
+        self.expenses.select {|expense| expense.payment.method_payment == method_payment}
     end
 
     def payments_this_week
