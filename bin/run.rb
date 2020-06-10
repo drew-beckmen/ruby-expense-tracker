@@ -103,7 +103,7 @@ def get_currency(base_or_target)
     currency
 end 
 
-def get_amount 
+def get_amount_conversion
     amount = $prompt.ask("Please enter an amount of money to convert: ")
     amount.to_f  #may want to come back to this later to do some error handling if it can't be converted. 
 end 
@@ -118,11 +118,11 @@ def progress_bar
     end
 end 
 
-def currency_exchange 
+def currency_exchange
     puts "Welcome to the currency exchange calculator!".colorize(:red)
     puts "We use live forex rates fetched from a trusted API!"
     base_currency = get_currency("base")
-    amount = get_amount
+    amount = get_amount_conversion
     target_currency = get_currency("target")
     progress_bar
     puts ""
