@@ -2,7 +2,6 @@ require 'net/http'
 require 'open-uri'
 require 'json'
 require 'dotenv/load'
-require 'pry'
 
 class GetData 
     key = ENV['FIXER_API_KEY']

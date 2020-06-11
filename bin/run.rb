@@ -3,13 +3,14 @@ require_relative '../config/environment'
 class CLI 
     include CurrencyExchange
     $prompt = TTY::Prompt.new
-
+    $a = Artii::Base.new 
     def initialize 
         run 
     end 
 
     def greet_user 
-        puts "Hi there! Welcome to Xpense!"
+        welcome = $a.asciify ("Hi there ! Welcome to Xpense !")
+        puts welcome.colorize(:cyan)
         answer = $prompt.yes?("Do you have an account with us?".colorize(:red))
         answer ? find_user : create_user 
     end 
@@ -314,7 +315,8 @@ class CLI
             when "Currency exchange calculator."
                 currency_exchange
             when "Quit the program."
-                puts "Thank you for using Xpense!"
+                goodbye = $a.asciify ("Thanks for using Xpense !")
+                puts goodbye.colorize(:cyan)
                 return 0
             end
         end 
