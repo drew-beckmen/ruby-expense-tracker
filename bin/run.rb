@@ -1,6 +1,4 @@
-require_relative './api-reader.rb'
 require_relative '../config/environment'
-require 'pry'
 
 #----------------------------------------------------------
 #This method retrieves all currencies supported by the app
