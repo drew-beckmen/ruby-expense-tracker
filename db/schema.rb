@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_06_08_193519) do
+ActiveRecord::Schema.define(version: 2020_06_11_161753) do
 
   create_table "expenses", force: :cascade do |t|
     t.float "amount"
@@ -27,6 +27,8 @@ ActiveRecord::Schema.define(version: 2020_06_08_193519) do
   create_table "users", force: :cascade do |t|
     t.string "userName"
     t.string "currency"
+    t.string "password"
+    t.string "password_digest"
   end
 
 end

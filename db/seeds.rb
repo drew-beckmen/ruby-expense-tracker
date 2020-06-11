@@ -1,13 +1,13 @@
 require 'date'
-
+require 'bcrypt'
 User.destroy_all
 Expense.destroy_all
 Payment.destroy_all 
 
-u1 = User.create(userName: "andy5", currency: "EUR")
-u2 = User.create(userName: "bob123", currency: "USD")
-u3 = User.create(userName: "jane22", currency: "GBP")
-u4 = User.create(userName: "elizabeth83", currency: "JPY")
+u1 = User.create(userName: "andy5", currency: "EUR", password_digest: BCrypt::Password.create('password'))
+u2 = User.create(userName: "bob123", currency: "USD", password_digest: BCrypt::Password.create('password'))
+u3 = User.create(userName: "jane22", currency: "GBP", password_digest: BCrypt::Password.create('password'))
+u4 = User.create(userName: "elizabeth83", currency: "JPY", password_digest: BCrypt::Password.create('password'))
 
 c1 = Payment.create(method_payment: "Credit Card")
 c2 = Payment.create(method_payment: "Debit Card")

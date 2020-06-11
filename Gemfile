@@ -11,4 +11,5 @@ gem "colorize", "~> 0.8.1"
 gem 'json'
 gem "rest-client", "~> 2.1"
 gem 'formatador'
+gem 'bcrypt', '~> 3.1.7'
 gem 'dotenv-rails', groups: [:development, :test]

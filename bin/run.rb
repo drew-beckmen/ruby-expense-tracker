@@ -21,7 +21,11 @@ class CLI
             userName = $prompt.ask("Please try again with a new username: ", default: ENV['USER'])
         end 
         currency = get_currency("account")
-        User.create(userName: userName, currency: currency)
+        password = $prompt.mask("Please enter a password: ")
+        new_user = User.new(userName: userName, currency: currency)
+        new_user.password = password
+        new_user.save
+        # User.create(userName: userName, currency: currency, password: secured_password)
     end 
 
     def find_user
@@ -37,6 +41,11 @@ class CLI
                 userName = $prompt.ask("Please try again: ", default: ENV['USER'])
                 current_user = User.all.find_by(userName: userName)
             end 
+        end
+        # Add password validation
+        user_password = $prompt.mask("Please enter the password for your account: ")
+        while !current_user.authenticate(user_password)
+            user_password = $prompt.mask("Incorrect password. Try again: ")
         end 
         current_user
     end

@@ -3,12 +3,14 @@ class Date
     def within_last?(duration, date = Date.current)
         between?(date - duration, date)
     end
-end 
+end
 
 class User < ActiveRecord::Base
-    has_many :expenses
-    has_many :payments, through: :expenses
+    has_secure_password 
 
+    has_many :expenses
+    has_many :payments, through: :expenses 
+    
     # Returns the total expenses logged in this platform by a specific User instance.
     def total_expenses
         sum_expenses(self.expenses)
