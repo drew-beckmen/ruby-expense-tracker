@@ -26,7 +26,7 @@ class CLI
         new_user = User.new(userName: userName, currency: currency)
         new_user.password = password
         new_user.save
-        # User.create(userName: userName, currency: currency, password: secured_password)
+        new_user 
     end 
 
     def find_user
@@ -158,6 +158,7 @@ class CLI
 
     def get_amount(user)
         amount = convert_to_float
+        binding.pry
         check_currency = $prompt.yes?("Is this in your base currency (#{user.currency})? ")
         if !check_currency
             currency = $prompt.ask("What is the three letter currency code for this expense? Want to select from a list? Press 1: ").upcase
