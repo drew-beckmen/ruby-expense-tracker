@@ -20,10 +20,7 @@ class CLI
             puts "Sorry, this user already exists!"
             userName = $prompt.ask("Please try again with a new username: ", default: ENV['USER'])
         end 
-        currency = $prompt.ask("Please enter a currency. We support Crypto! ").upcase
-        while !CurrencyExchange.valid_currency?(currency)
-            currency = $prompt.ask("Sorry, that's not a valid currency! Please try again: ").upcase
-        end 
+        currency = get_currency("account")
         User.create(userName: userName, currency: currency)
     end 
 
@@ -56,24 +53,22 @@ class CLI
     end 
 
     def get_currency(base_or_target)
-        currency = $prompt.ask("What is the three letter code for your #{base_or_target} currency? Want to select from a list? Press 1: ")
+        currency = $prompt.ask("What is the three letter code for your #{base_or_target} currency? Want to select from a list? Press 1: ").upcase
         case currency
         when "1"
-            currency = $prompt.select("Choose a currency: ", CurrencyExchange::SUPPORTED_CURRENCIES)
+            currency = $prompt.select("Choose a currency: ", CurrencyExchange::SUPPORTED_CURRENCIES).upcase
         else 
             while !CurrencyExchange.valid_currency?(currency)
                 puts "Sorry, #{currency} is not a supported currency."
-                currency = $prompt.ask("Please enter a valid 3 letter code for your #{base_or_target} currency: ")
+                currency = $prompt.ask("Please enter a valid 3 letter code for your #{base_or_target} currency: ").upcase
             end 
         end 
         currency
     end 
 
     def get_amount_conversion
-        amount = $prompt.ask("Please enter an amount of money to convert: ")
-        amount.to_f  #may want to come back to this later to do some error handling if it can't be converted. 
+        convert_to_float
     end 
-
 
     def progress_bar
         total    = 1000
@@ -103,13 +98,15 @@ class CLI
         str_month = $prompt.select("Choose a month: ", months)
         int_month = months.index(str_month) + 1
         day = $prompt.ask("Enter a day: ")
-        day = day.to_i #come back to this - error handling for conversion
+        day = Integer(day) rescue nil
         year = $prompt.ask("Enter a year: ")
-        year = year.to_i 
+        year = Integer(year) rescue nil
         [year, int_month, day]
     end 
     # Checks whether a date is valid (including checking if its in the future!). Returns true if date is not valid, false if valid.
     def invalid_date(arr_date)
+        arr_date[0].nil? ||
+        arr_date[2].nil? ||
         arr_date[0] > Date.today.year || 
         (arr_date[0] == Date.today.year && arr_date[1] > Date.today.month) || 
         (arr_date[0] == Date.today.year && arr_date[1] == Date.today.month && arr_date[2] > Date.today.day) || 
@@ -138,19 +135,29 @@ class CLI
         date
     end 
 
-    def get_amount(user)
+    # Ask user for numerical input until they input something valid
+    def convert_to_float
         amount = $prompt.ask("Please enter an amount: ")
-        amount = amount.to_f #come back to error handling later
+        amount = Float(amount) rescue nil 
+        while amount.nil? 
+            amount = $prompt.ask("Sorry, invalid amount to convert. Please try again: ")
+            amount = Float(amount) rescue nil 
+        end 
+        amount
+    end
+
+    def get_amount(user)
+        amount = convert_to_float
         check_currency = $prompt.yes?("Is this in your base currency (#{user.currency})? ")
         if !check_currency
-            currency = $prompt.ask("What is the three letter currency code for this expense? Want to select from a list? Press 1: ")
+            currency = $prompt.ask("What is the three letter currency code for this expense? Want to select from a list? Press 1: ").upcase
             case currency
                 when "1"
-                    currency = $prompt.select("Choose a currency: ", CurrencyExchange::SUPPORTED_CURRENCIES)
+                    currency = $prompt.select("Choose a currency: ", CurrencyExchange::SUPPORTED_CURRENCIES).upcase
                 else 
                     while !CurrencyExchange.valid_currency?(currency)
                         puts "Sorry, #{currency} is not a supported currency."
-                        currency = $prompt.ask("Please enter a valid 3 letter code for this expense: ")
+                        currency = $prompt.ask("Please enter a valid 3 letter code for this expense: ").upcase
                     end 
             end 
             amount = CurrencyExchange.convert_currency(currency, user.currency, amount)
@@ -159,6 +166,7 @@ class CLI
     end 
 
     def get_payment_method(user)
+        user.payments.reload
         payment_methods = user.payments_list 
         payment_methods << "Add a new method of payment"
         method = $prompt.select("Choose a payment method: ", payment_methods)
@@ -169,7 +177,6 @@ class CLI
         else 
             p = Payment.find_by(method_payment: method)
         end 
-        p
     end 
 
     def get_description 
@@ -191,6 +198,10 @@ class CLI
     end 
 
     def display_expenses(list_expenses)
+        if list_expenses.empty?
+            puts "Sorry, no expenses found!".colorize(:red)
+            return 0
+        end 
         arr_hashes = list_expenses.map {|expense| expense.attributes}
         arr_hashes.map{|expense| 
             expense.delete("id") # we don't need the id of each expense
@@ -225,21 +236,34 @@ class CLI
     end 
 
     def choose_previous_transaction(user, operation)
-        expense_descriptions = user.expenses.map{|expense| "#{expense.description} - #{expense.logged_on}"}    
+        expense_descriptions = user.expenses.map{|expense| "#{expense.description} - #{expense.logged_on}"}  
+        expense_descriptions.unshift("Back to main menu")
         expense_to_delete = $prompt.select("Choose an expense to #{operation}: ", expense_descriptions)
+        if expense_to_delete == "Back to main menu"
+            return 0
+        end 
+        
         expense_to_delete.split(" - ")
     end 
         
 
     def delete_expense(user)
-        description, date = choose_previous_transaction(user, "delete")
+        if user.expenses.empty?
+            puts "Sorry, no expenses found!".colorize(:red)
+            return 0
+        end
+        expense_to_delete = choose_previous_transaction(user, "delete")
+        return 0 if expense_to_delete == 0
+        description, date = expense_to_delete
         Expense.find_by(description: description, logged_on: date, user_id: user.id).destroy
         user.expenses.reload
     end
 
 
     def update_expense(user)
-        description, date = choose_previous_transaction(user, "update")
+        expense_to_update = choose_previous_transaction(user, "update")
+        return 0 if expense_to_update == 0
+        description, date = expense_to_update
         expense_to_update = Expense.find_by(description: description, logged_on: date, user_id: user.id)
         category_to_update = $prompt.multi_select("What would you like to update?", ["amount", "description", "logged_on", "payment_method"])
         amount, logged_on, payment_method, description = expense_to_update.amount, expense_to_update.logged_on, expense_to_update.payment, expense_to_update.description 
