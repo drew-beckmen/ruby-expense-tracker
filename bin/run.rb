@@ -242,7 +242,7 @@ class CLI
         if expense_to_delete == "Back to main menu"
             return 0
         end 
-        
+
         expense_to_delete.split(" - ")
     end 
         
