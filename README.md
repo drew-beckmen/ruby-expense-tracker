@@ -31,8 +31,13 @@ Xpense is a great tool for users of all ages.
 ### Setup
 1. Clone the repository to your local machine using `git clone <url>`.
 2. In the project's directory, run `bundle install` to install all the gems and dependencies associated with the project.
-3. To set up your database, run `rake db:migate`. 
-4. To seed your database, run `rake db:seed`.
+3. API Key: This app relies on a private API key from Fixer.io. To run the program, you need to go to Fixer.io and create a free account. Once you have your API key, create a file `.env` in the top level of the project directory. Insert the following line into `.env`
+
+``` 
+FIXER_API_KEY="<your-private-api-key-goes-here>"
+```
+4. To set up your database, run `rake db:migate`. 
+5. To seed your database, run `rake db:seed`.
 
 ### Running 
 To run the program, type: `ruby bin/run.rb`.
