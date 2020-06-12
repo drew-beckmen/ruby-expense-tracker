@@ -37,7 +37,7 @@ class CLI
             change_mode = $prompt.yes?("Would you like to create a new user?")
             if change_mode 
                 create_user
-                break
+                return 0 #exit this function
             else 
                 userName = $prompt.ask("Please try again: ", default: ENV['USER'])
                 current_user = User.all.find_by(userName: userName)
@@ -97,7 +97,7 @@ class CLI
         target_currency = get_currency("target")
         progress_bar
         puts ""
-        puts "#{amount} #{base_currency} is #{CurrencyExchange.convert_currency(base_currency, target_currency, amount).round(2)} #{target_currency}"
+        puts "#{amount} #{base_currency} is #{CurrencyExchange.convert_currency(base_currency, target_currency, amount).round(2)} #{target_currency}".colorize(:red)
         puts "Thank you for using the currency exchange calculator."
         puts "Returning you to the main menu..."
     end 
@@ -187,6 +187,7 @@ class CLI
         else 
             p = Payment.find_by(method_payment: method)
         end 
+        p
     end 
 
     def get_description 
@@ -205,6 +206,7 @@ class CLI
         p = get_payment_method(user)
         Expense.create(amount: amount, user_id: user.id, payment_id: p.id, description: description, logged_on: date)
         user.expenses.reload 
+        user.payments.reload
     end 
 
     def display_expenses(list_expenses)
@@ -233,12 +235,16 @@ class CLI
         case review_time 
         when "All expenses"
             display_expenses(user.expenses)
+            puts "Total lifetime expenses are #{user.total_expenses} #{user.currency}".colorize(:red)
         when "Expenses from the past year."
             display_expenses(user.expenses_this_year)
+            puts "Total expenses from the past year are #{user.total_year_expenses} #{user.currency}".colorize(:red)
         when "Expenses from the past month."
             display_expenses(user.expenses_this_month)
+            puts "Total expenses from the past month are #{user.total_month_expenses} #{user.currency}".colorize(:red)     
         when "Expenses from the past week."
             display_expenses(user.expenses_this_week)
+            puts "Total expenses from the past week are #{user.total_week_expenses} #{user.currency}".colorize(:red)
         when "Expenses by payment method."
             payment = $prompt.select("Pick a payment method: ", user.payments_list)
             display_expenses(user.expenses_by_payment_method(payment))
