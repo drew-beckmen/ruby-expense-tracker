@@ -1,13 +1,16 @@
 require_relative '../config/environment'
 
 class CLI 
-    include CurrencyExchange
+    include CurrencyExchange # include module which contains methods for currency conversion
+    
     $prompt = TTY::Prompt.new
     $a = Artii::Base.new 
+    
     def initialize 
         run 
     end 
 
+    # Greets a user and they can either create new account or find existing account
     def greet_user 
         welcome = $a.asciify ("Hi there ! Welcome to Xpense !")
         puts welcome.colorize(:cyan)
@@ -15,6 +18,7 @@ class CLI
         answer ? find_user : create_user 
     end 
 
+    # Instantiate a new User instance with username, password, and currency
     def create_user
         userName = $prompt.ask("Please enter a username: ", default: ENV['USER'])
         while !User.all.find_by(userName: userName).nil? 
@@ -25,10 +29,11 @@ class CLI
         password = $prompt.mask("Please enter a password: ")
         new_user = User.new(userName: userName, currency: currency)
         new_user.password = password
-        new_user.save
+        new_user.save #store it to the database
         new_user 
     end 
 
+    # Retrieves an existing user instance - verifies with password.
     def find_user
         userName = $prompt.ask("Please enter a username: ", default: ENV['USER'])
         current_user = User.all.find_by(userName: userName)
@@ -43,6 +48,7 @@ class CLI
                 current_user = User.all.find_by(userName: userName)
             end 
         end
+        
         # Add password validation
         user_password = $prompt.mask("Please enter the password for your account: ")
         while !current_user.authenticate(user_password)
@@ -62,6 +68,7 @@ class CLI
         end
     end 
 
+    # Allow user to enter a valid currency either by selecting from a list or entering it themselves.
     def get_currency(base_or_target)
         currency = $prompt.ask("What is the three letter code for your #{base_or_target} currency? Want to select from a list? Press 1: ").upcase
         case currency
@@ -76,6 +83,7 @@ class CLI
         currency
     end 
 
+    # Ensures that the amount can be converted without throwing error
     def get_amount_conversion
         convert_to_float
     end 
@@ -104,9 +112,9 @@ class CLI
 
     def enter_date
         months = Array.new(Date::MONTHNAMES)
-        months.shift(1)
+        months.shift(1) #Date::MONTHNAMES starts with nil so months can be indexed 1-12 rather to 0-11 but we want to get rid of nil.
         str_month = $prompt.select("Choose a month: ", months)
-        int_month = months.index(str_month) + 1
+        int_month = months.index(str_month) + 1 #January would be index 0, we want index 1.
         day = $prompt.ask("Enter a day: ")
         day = Integer(day) rescue nil
         year = $prompt.ask("Enter a year: ")
@@ -115,14 +123,15 @@ class CLI
     end 
     # Checks whether a date is valid (including checking if its in the future!). Returns true if date is not valid, false if valid.
     def invalid_date(arr_date)
-        arr_date[0].nil? ||
-        arr_date[2].nil? ||
+        arr_date[0].nil? || #if the year failed to be converted to an integer
+        arr_date[2].nil? || #if the day failed to be converted to an integer
         arr_date[0] > Date.today.year || 
         (arr_date[0] == Date.today.year && arr_date[1] > Date.today.month) || 
         (arr_date[0] == Date.today.year && arr_date[1] == Date.today.month && arr_date[2] > Date.today.day) || 
         !Date.valid_date?(arr_date[0], arr_date[1], arr_date[2])
     end 
 
+    # allows user to select a date (either today, yesterday, or further back in time)
     def select_date
         date = $prompt.select("When did you incur this expense?") do |menu|
             menu.choice "Today"
@@ -175,6 +184,7 @@ class CLI
         amount
     end 
 
+    # Allows a user to select an existing method of payment or enter a new one.
     def get_payment_method(user)
         user.payments.reload
         payment_methods = user.payments_list 
@@ -190,6 +200,7 @@ class CLI
         p
     end 
 
+    # Allows a user to enter expense description - cannot be nil
     def get_description 
         description = $prompt.ask("Please briefly describe this expense: ")
         while description.nil? 
@@ -199,23 +210,25 @@ class CLI
         description
     end 
 
+    # Calls on helper methods to get each component of a new expense
     def create_expense(user)
         date = select_date
         amount = get_amount(user)
         description = get_description
         p = get_payment_method(user)
         Expense.create(amount: amount, user_id: user.id, payment_id: p.id, description: description, logged_on: date)
+        # Reload both payments and expenses after creating a new expense
         user.expenses.reload 
-        user.payments.reload
+        user.payments.reload # must also reload payments in the case that a new payment is logged!
     end 
 
-    def display_expenses(list_expenses)
+    def display_expenses(list_expenses) #formats the array of hashes so that Formatador can display it
         if list_expenses.empty?
             puts "Sorry, no expenses found!".colorize(:red)
             return 0
         end 
         arr_hashes = list_expenses.map {|expense| expense.attributes}
-        arr_hashes.map{|expense| 
+        arr_hashes.map{ |expense| 
             expense.delete("id") # we don't need the id of each expense
             expense.delete("user_id") # nor do we need the user it belongs to 
             expense["payment_method"] = expense.delete "payment_id" #change name of the column in the table
@@ -224,6 +237,7 @@ class CLI
         Formatador.display_table(arr_hashes) #display the table
     end 
 
+    # Displays expenses according to timeframe specified by the user. 
     def review_expenses(user)
         review_time = $prompt.select("What expenses would you like to review?") do |menu|
             menu.choice "All expenses"
@@ -251,6 +265,7 @@ class CLI
         end 
     end 
 
+    # Displays all transactions that can be updated or deleted. 
     def choose_previous_transaction(user, operation)
         expense_descriptions = user.expenses.map{|expense| "#{expense.description} - #{expense.logged_on}"}  
         expense_descriptions.unshift("Back to main menu")
@@ -258,11 +273,10 @@ class CLI
         if expense_to_delete == "Back to main menu"
             return 0
         end 
-
         expense_to_delete.split(" - ")
     end 
         
-
+    # Allows a user to delete an expense based on description & date
     def delete_expense(user)
         if user.expenses.empty?
             puts "Sorry, no expenses found!".colorize(:red)
@@ -275,11 +289,12 @@ class CLI
         user.expenses.reload
     end
 
-
+    # Allows a user to update expense based on description & date. 
+    # They can update any of the fields of an expense (date, amount, description, payment method)
     def update_expense(user)
         expense_to_update = choose_previous_transaction(user, "update")
-        return 0 if expense_to_update == 0
-        description, date = expense_to_update
+        return 0 if expense_to_update == 0 #if expense_to_update is zero, that means there are no expenses for this user. 
+        description, date = expense_to_update #parallel assignment for the array returned by the method choose_previous_transaction
         expense_to_update = Expense.find_by(description: description, logged_on: date, user_id: user.id)
         category_to_update = $prompt.multi_select("What would you like to update?", ["amount", "description", "logged_on", "payment_method"])
         amount, logged_on, payment_method, description = expense_to_update.amount, expense_to_update.logged_on, expense_to_update.payment, expense_to_update.description 

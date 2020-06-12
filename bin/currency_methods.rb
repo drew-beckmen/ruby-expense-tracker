@@ -8,7 +8,7 @@ module CurrencyExchange
     def self.get_currencies(json_hash)
         all_currencies = json_hash.keys
         all_currencies << "EUR"
-        all_currencies
+        all_currencies.sort
     end 
 
     #Global constant for all the currencies we support
@@ -23,6 +23,8 @@ module CurrencyExchange
         rates[target]
     end 
 
+    # API only gives us exchange rates with EUR as a base rate 
+    # so we first convert to euros then to the target currency
     def self.convert_to_target(base, target, amount, rates)
         euro_value = amount.to_f * (1 / rates[base])
         euro_value * find_target_rate(target, rates)

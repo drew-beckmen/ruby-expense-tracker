@@ -1,4 +1,5 @@
 # Extending the date class (https://stackoverflow.com/questions/42712101/if-date-is-less-than-a-week-ago-conditional)
+# Adding method to return whether or not a date is within the last x number of dayss
 class Date 
     def within_last?(duration, date = Date.current)
         between?(date - duration, date)
@@ -51,10 +52,12 @@ class User < ActiveRecord::Base
         sum_expenses(expenses_this_year)
     end 
 
-    # Given an input of a year, return an array of all the expenses.
-    def expenses_given_year(year)
-        self.expenses.select {|expense| expense.logged_on.year == year}
-    end
+    # # Given an input of a year, return an array of all the expenses.
+    # Never implemented this feature - but in future, we could display a list of 
+    # all the years with expenses logged and users could choose a specific year.
+    # def expenses_given_year(year)
+    #     self.expenses.select {|expense| expense.logged_on.year == year}
+    # end
 
     # Returns a list of all payment methods that this user has used.
     def payments_list
